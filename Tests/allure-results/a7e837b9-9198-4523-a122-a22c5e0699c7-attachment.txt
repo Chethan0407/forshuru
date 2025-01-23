@@ -1,0 +1,2 @@
+INFO     Utilities.logger_config:conftest.py:46 Initialized Chrome browser
+INFO     Utilities.logger_config:conftest.py:69 Closing browser

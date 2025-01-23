@@ -1,0 +1,30 @@
+other url i can play with is
+
+http://uitestingplayground.com/
+
+
+command
+pytest -m heroku --browser=chrome --url=default
+
+
+for parellel
+pytest -m heroku --browser=chrome --url=default -n auto
+
+
+
+pytest -m heroku --url=default
+pytest -m demo --url=dropqa_testing
+
+
+
+pytest -n 2 -m "heroku" --url=default &
+pytest -n 2 -m "demo" --url=dropqa_testing &
+wait
+
+
+//span[contains(text(), 'iPhone')]
+
+
+"//span[contains(text(), 'Apple iPhone 15 (128 GB) - Black')]")
+
+    act_text = (By.XPATH, "//span[contains(text(), 'The field is required')]")  # Corrected XPath

@@ -1,0 +1,2 @@
+24-14-11 01:31:15 AM - INFO - Initialized Chrome browser
+24-14-11 01:31:22 AM - INFO - Closing browser

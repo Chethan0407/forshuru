@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+
+    environment {
+        PYTHON_VERSION = '3.9'
+        COUNTER_FILE = 'build_counter.txt'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm  // Check out the latest code from the repository
+            }
+        }
+
+        stage('Set Up Python') {
+            steps {
+                script {
+                    // Install Python 3.9 and set up the virtual environment
+                    sh 'sudo apt-get update'
+                    sh 'sudo apt-get install python3.9 python3.9-venv python3.9-dev -y'
+                    sh 'python3.9 -m venv venv'  // Create virtual environment
+                    sh './venv/bin/pip install --upgrade pip'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Install dependencies from requirements.txt
+                    sh './venv/bin/pip install -r requirements.txt'
+                    sh './venv/bin/pip install pytest-xdist'  // Install pytest-xdist for parallel testing
+                }
+            }
+        }
+
+        stage('Determine URL for Test') {
+            steps {
+                script {
+                    // Read the current build count from the file
+                    def counter = 0
+                    if (fileExists(COUNTER_FILE)) {
+                        counter = readFile(COUNTER_FILE).trim().toInteger()
+                    }
+
+                    // Alternate URL selection based on the counter
+                    def selected_url = (counter % 2 == 0) ? 'default' : 'dropqa_testing'
+                    echo "Selected URL: ${selected_url}"
+
+                    // Store the updated counter back to the file
+                    counter += 1
+                    writeFile file: COUNTER_FILE, text: counter.toString()
+
+                    // Set the URL environment variable for the test
+                    env.URL = selected_url
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    def browser = 'chrome' // You can set this dynamically as well if needed
+                    def headless = false // Set to true for headless mode, if needed
+
+                    // Run pytest with the dynamic URL
+                    def url = env.URL
+                    def headless_option = headless ? '--headless' : ''
+
+                    sh """
+                    ./venv/bin/pytest \
+                    --browser=${browser} \
+                    --url=${url} \
+                    ${headless_option} \
+                    -m heroku --browser=${browser} -n auto
+                    """
+                }
+            }
+        }
+
+        stage('Post-Test Actions') {
+            steps {
+                echo "Tests have finished running"
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up after the build"
+        }
+
+        success {
+            echo "Tests passed successfully!"
+        }
+
+        failure {
+            echo "Tests failed!"
+        }
+    }
+}
